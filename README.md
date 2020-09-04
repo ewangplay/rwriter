@@ -4,6 +4,12 @@ Rotating File Writer in Golang. Implements io.Writer.
 
 ## Usage
 
+Get package:
+```
+go get github.com/ewangplay/rwriter
+```
+
+A sample:
 ```
 package main
 
@@ -18,7 +24,7 @@ func main() {
 	var err error
 	var w io.Writer
 
-	cfg := &rwriter.RotateWriterConfig{
+	cfg := &rwriter.Config{
 		Module: "test",
 		Path:   "/path/to/log/files",
 	}
@@ -32,3 +38,5 @@ func main() {
 	log.Println("Hello, rotate writer!")
 }
 ```
+
+The RototeWriter instance can be passed to any parameter that matches io.Writer interface.
