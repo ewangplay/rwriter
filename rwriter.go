@@ -8,20 +8,28 @@ import (
 	"time"
 )
 
-// LogFileMaxSize max size per log file: 100M
-const LogFileMaxSize = 100
+// LogFileMaxSize defines the default max size of each log file
+const (
+	LogFileBaseName = "test"
+	LogFileMaxSize  = 100
+	LogFilePath     = "."
+)
 
-// RotateWriterConfig defines RotateWriter config
-type RotateWriterConfig struct {
+// Config defines RotateWriter config
+// Module defines the basename of log files, the defualt value is 'test';
+// Path defines the path of log files, the default value is '.';
+// MaxSize defines the max size of each log file, the unit is megabyte, the default value is 100;
+// RotateDaily defines whether to rotate each day, the default value is false.
+type Config struct {
 	Module      string
 	Path        string
 	MaxSize     int64
 	RotateDaily bool
 }
 
-// RotateWriter struct define
+// RotateWriter defines the rotate writer
 type RotateWriter struct {
-	cfg      *RotateWriterConfig
+	cfg      *Config
 	lock     sync.Mutex
 	filename string
 	currDate string
@@ -30,24 +38,49 @@ type RotateWriter struct {
 }
 
 // NewRotateWriter make a new RotateWriter. Return nil if error occurs during setup.
-func NewRotateWriter(cfg *RotateWriterConfig) (*RotateWriter, error) {
+func NewRotateWriter(cfg *Config) (*RotateWriter, error) {
+
+	cfg = fulfilConfig(cfg)
+
 	w := &RotateWriter{cfg: cfg}
-	filename := fmt.Sprintf("%s.log", cfg.Module)
-	w.filename = filepath.Join(cfg.Path, filename)
+
+	w.filename = filepath.Join(cfg.Path, fmt.Sprintf("%s.log", cfg.Module))
 	err := w.rotate()
 	if err != nil {
 		return nil, err
 	}
-	if w.cfg.MaxSize == 0 {
-		w.cfg.MaxSize = LogFileMaxSize
-	}
+
 	w.currDate = time.Now().Format("2006-01-02")
 	w.quit = make(chan int)
 	go w.autoRotate(w.quit)
+
 	return w, nil
 }
 
-// Close ...
+func fulfilConfig(cfg *Config) *Config {
+	if cfg == nil {
+		cfg = &Config{
+			Module:      LogFileBaseName,
+			Path:        LogFilePath,
+			MaxSize:     LogFileMaxSize,
+			RotateDaily: false,
+		}
+		return cfg
+	}
+
+	if cfg.Module == "" {
+		cfg.Module = LogFileBaseName
+	}
+	if cfg.Path == "" {
+		cfg.Path = LogFilePath
+	}
+	if cfg.MaxSize == 0 {
+		cfg.MaxSize = LogFileMaxSize
+	}
+	return cfg
+}
+
+// Close the rotate writer
 func (w *RotateWriter) Close() error {
 	if w.quit != nil {
 		close(w.quit)

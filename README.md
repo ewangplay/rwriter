@@ -20,7 +20,7 @@ func main() {
 
 	cfg := &rwriter.RotateWriterConfig{
 		Module: "test",
-		Path:   ".",
+		Path:   "/path/to/log/files",
 	}
 	w, err = rwriter.NewRotateWriter(cfg)
 	if err != nil {
@@ -29,8 +29,6 @@ func main() {
 	}
 
 	log.SetOutput(w)
-	log.SetPrefix("HelloKitty ")
-	log.SetFlags(log.Lshortfile | log.LstdFlags)
 	log.Println("Hello, rotate writer!")
 }
 ```
